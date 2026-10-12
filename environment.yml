@@ -1,0 +1,19 @@
+name: v01-vlm-faultline
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.11
+  - pip
+  - numpy
+  - pandas
+  - scipy
+  - scikit-learn
+  - matplotlib
+  - pillow
+  - pyyaml
+  - tqdm
+  - pytest
+  - opencv
+  - ffmpeg
+# PyTorch (CPU) and onnx/onnxruntime are added in Phase 4 and Phase 8 to keep this env small.

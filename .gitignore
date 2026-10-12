@@ -1,0 +1,35 @@
+# data and generated artefacts (regenerable from seeds + manifest)
+data/*
+!data/.gitkeep
+*.mp4
+*.avi
+*.npy
+*.npz
+
+# secrets and environments
+.env
+*.pem
+
+# python
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+
+# model files (adapters go to Hugging Face Hub, not git)
+*.safetensors
+*.onnx
+*.pt
+*.pth
+
+# terraform
+infra/terraform/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+
+# editor / OS
+.vscode/
+Thumbs.db

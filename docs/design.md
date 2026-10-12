@@ -84,3 +84,13 @@ Qwen2.5-VL-3B licence; QLoRA fit and fp16 stability on Kaggle T4×2; answer-toke
 ## 10. Out of scope
 
 Real footage, multiple camera angles, 3D, tracking, real-time VLM inference, GGUF conversion and vLLM serving (L01), Vespa/Feast, Flyte/Ray.
+
+## Phase 1 addendum (simulator spec)
+
+- Clip: 6 s, 16 fps, 96 frames, 640×360. Samples at t = 0, 0.75, …, 5.25 s (frames 0, 12, …, 84). Tile 320×180, sheet 1280×360.
+- Counterfactual rendering gives a noise-free fault mask per sampled frame. `fault_region_px` = max mask area at tile scale; `expected_visible_tiles` = sampled frames with ≥ 40 px (provisional).
+- Random streams: [seed,1] world, [seed,2] fault, [seed,100+k] spray droplets, [seed,1000+k] sensor noise.
+- Scenes: A1–A3 train, D1 (dim warm light, diagonal belt texture) held out.
+- Planned source clips: train 1,500, val 250, test 500, held-out 200. One clip per seed; degraded copies inherit the split.
+- Gate: `fixed_v1` schedule. Stuck item: halt zone and 2.25 s minimum stop (see findings 005). Severity bins: three equal bins over 0.1–1.0.
+- Code: `faultline.sim` (config, scenes, plan, render, clip), `faultline.media`, `faultline.sample.sheet`, `faultline.degrade.provisional`; `scripts/preview_sim.py`.

@@ -39,11 +39,22 @@ def generate_clip(seed: int, cls: str, scene_id: str, severity: float | None = N
                 sample_masks[idx.index(k)] = m
 
     vis = [float(px[k] * C.TILE_AREA_SCALE) for k in idx]
-    halted_tiles = None
-    if cls == "stuck_item":
+    onset_frame = plan.onset_frame
+    post_onset = None if onset_frame is None else int(sum(k >= onset_frame for k in idx))
+    halted_tiles = frozen_tiles = gap_px = None
+    if cls == "normal":
+        rule, visible = "none", 0
+    elif cls == "stuck_item":
         # the mask also covers displaced downstream items, so count tiles where the stuck item is actually halted
         k0, k1 = plan.extra["hold_frames"]
-        halted_tiles = int(sum(k0 <= k < k1 for k in idx))
+        halted = [k0 <= k < k1 for k in idx]
+        halted_tiles = int(sum(halted))
+        frozen_tiles = int(sum(a and b for a, b in zip(halted, halted[1:])))  # consecutive halted pairs
+        gap_px = plan.extra.get("neighbor_gap_at_onset_px")
+        rule, visible = "halted_tiles", halted_tiles
+    else:
+        rule = {"gate_open": "mask_gate_differs_from_schedule", "spray": "mask_area_ge_min_px", "blocked_lens": "mask_area_ge_min_px"}[cls]
+        visible = int(sum(v >= C.MIN_VISIBLE_PX for v in vis))
     meta = dict(
         clip_id=f"{cls}_{scene_id}_{seed:06d}",
         seed=seed,
@@ -57,7 +68,12 @@ def generate_clip(seed: int, cls: str, scene_id: str, severity: float | None = N
         halt_x=None if plan.halt_x is None else round(plan.halt_x, 4),
         fault_region_px=round(float(px.max() * C.TILE_AREA_SCALE), 1),
         visible_px_samples=[round(v, 1) for v in vis],
-        expected_visible_tiles=halted_tiles if halted_tiles is not None else int(sum(v >= C.MIN_VISIBLE_PX for v in vis)),
+        expected_visible_tiles=visible,
+        visibility_rule=rule,
+        post_onset_tiles=post_onset,
+        halted_tiles=halted_tiles,
+        frozen_tiles=frozen_tiles,
+        neighbor_gap_at_onset_px=None if gap_px is None else round(gap_px, 2),
         gate_schedule_id=C.GATE_SCHEDULE_ID,
         belt_speed=round(plan.belt_speed, 3),
         brightness=round(plan.brightness, 4),

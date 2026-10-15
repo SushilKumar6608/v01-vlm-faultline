@@ -60,3 +60,22 @@ Found in the first preview review (outside reviewer plus my own numerical checks
 - Caveats: one rater who is also the author, knew the classes were balanced, and had the decision checklist; one stuck_item sheet (sheet_001, assisted) was labelled with help from Claude and counts as correct. This shows the faults are visible, not how hard the task is.
 - Decision: no sim change. The low-severity stuck item stays as the faintest case on the severity axis and is reported per severity bin. Revisit if the VLM or CNN results show it is at chance in the high bin too.
 - Next: Phase 2 (bulk generation, manifest, seed-based splits). Final degradation recipe frozen in Phase 3, followed by a shorter repeat of the blind audit.
+
+## 007 – 2026-10-12 – Phase 2 design decisions (dataset v1)
+
+- Sizes kept: train 1,500 / val 250 / test 500 / held-out 200. Held-out is not enlarged; the README states "wide intervals, about 13 clips per bin" and treats it as a qualitative domain-shift result.
+- Flagged clips are regenerated with the same split, class, scene and exact severity, only the seed changes (reserve block 500000+), so the stratification does not drift. Originals go to `quarantine/` with the reason logged in `configs/replacements_v1.csv`.
+- The tile count catches spatial invisibility only. The sheet_006 miss was generated after the 2.25 s floor and had 3–4 halted tiles, so tile counts are not a sufficient floor for stuck_item. A targeted blind sweep (24 stuck_item sheets at severity 0.15–0.45, early and late onset, mixed with 24 normals) sets the stop-duration floor and an optional stuck-specific onset cap before the full render. Detection by halted tiles and by onset is reported with Wilson intervals.
+- Human review in Phase 2 is a middle option: automated checks on all clips, worst-case montages, and a random 10 % label-aware spot check of the test split (50 sheets). Stopping rule: 3 or more not labelable means review the whole test split; 0 of 50 gives an upper 95 % bound of about 6 %. The label-aware check (are labels right) and the Phase 3 blind audit (can a human see the fault) are separate gates.
+- Reproducibility: the manifest records ffmpeg, OpenCV, numpy, Python versions and git commit per clip. Frame determinism across machines is tested with `scripts/frame_hash.py`.
+- Pipeline robustness: atomic tmp-file rename and sidecar-last completion marker; resume trusts a clip only if the sidecar sha256 matches. Spec validation runs before any rendering (duplicates, counts, null severity for normals, severity inside its bin, scene sets, seed blocks).
+- New manifest fields: `visibility_rule`, `post_onset_tiles`, `halted_tiles`, `frozen_tiles`, `neighbor_gap_at_onset_px` (stuck_item halting against a neighbour; report-only warning).
+
+## 008 – 2026-10-15 – Stuck-item sweep: floor kept
+
+- Targeted blind pass (author, single rater, degraded v1): 24 stuck_item sheets at severity 0.15–0.45 (8 per sub-range, half early onset ≤2.5 s, half late ≥2.75 s) mixed with 24 normals. Detection 22/24 = 0.92 (95 % CI 0.74–0.98); false alarms 0/24 (CI 0–0.14).
+- By stop duration: <2.6 s 16/18 = 0.89 (CI 0.67–0.97); 2.6–3.0 s 3/3; ≥3.0 s 3/3. By halted tiles: 3 tiles 13/14, 4 tiles 9/10. By onset: early 11/12, late 11/12.
+- Misses: stop 2.44 s (4 halted tiles, onset 3.0 s) and stop 2.50 s (3 halted tiles, onset 2.38 s). With the earlier sheet_006 miss (severity 0.26) the faint end of the axis is where a human occasionally fails.
+- Decision: keep STUCK_MIN_STOP_S = 2.25 s and STUCK_ONSET_MAX_S = 3.5 s (no config change). The 80 % criterion is met overall and in the lowest bin, onset made no difference, and keeping the faint cases keeps the severity axis honest. Results are reported per severity bin; low-severity stuck items are expected to be the hardest class and the README says so.
+- Caveats: 18 sheets in the lowest bin (interval 0.67–0.97), so no measured 80 % claim there; rater is the author and knows the signature; single rater.
+- Next: 40-clip pilot render on the laptop (timing, manifest, integrity check), then the full render.

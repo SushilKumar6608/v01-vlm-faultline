@@ -1,0 +1,15 @@
+# Dataset v1 definition. Changing anything here changes the dataset: bump dataset_version.
+dataset_version: v1
+master_seed: 20261012          # drives stratified severity draws and row order only
+spec_schema_version: "1"
+splits:                        # one clip per seed; seeds are disjoint blocks
+  train:   {n_per_class: 300, scenes: [A1, A2, A3], seed_start: 100000}
+  val:     {n_per_class: 50,  scenes: [A1, A2, A3], seed_start: 200000}
+  test:    {n_per_class: 100, scenes: [A1, A2, A3], seed_start: 300000}
+  heldout: {n_per_class: 40,  scenes: [D1],         seed_start: 400000}
+reserve_seed_start: 500000     # replacement clips for flagged ones (blind audits use 900000+)
+visibility:
+  min_visible_tiles: 3         # gate_open, spray, blocked_lens (mask based)
+  stuck_min_halted_tiles: 3    # stuck_item; stuck-item sweep (findings 008): floor 2.25 s and onset cap 3.5 s kept
+  stuck_min_frozen_pairs: 2
+  neighbor_gap_warn_px: 8      # stuck_item halting against a neighbour: report only

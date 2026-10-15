@@ -54,8 +54,9 @@ Reporting: per-class precision/recall with n and Wilson intervals (primary), con
 
 ## 7. Data gates
 
-- Phase 2: every test clip checked on its contact sheet; fault_region_px recorded; clean dataset frozen.
-- Phase 3: visibility audit on clean and degraded sheets at final resolution; blind human baseline.
+- Phase 2 (label correctness, label-aware): automated checks on all 2,450 clips, worst-case montages, and a random 10 % label-aware spot check of the test split (50 sheets; stopping rule: 3 or more not labelable means review the whole test split). Clean dataset frozen after the gate.
+- Phase 3 (human detectability, blind): the blind audit. It is a different gate from the Phase 2 spot check: the first checks that labels are right, the second that faults can be seen.
+- Phase 3: visibility audit on clean and degraded sheets at final resolution; blind human baseline (see above).
 - Degradation: two levels (clean, one degraded); ffmpeg flags in a table; noise seed from the clip seed; `-threads 1`; record ffmpeg version.
 
 ## 8. Phases
@@ -94,3 +95,14 @@ Real footage, multiple camera angles, 3D, tracking, real-time VLM inference, GGU
 - Planned source clips: train 1,500, val 250, test 500, held-out 200. One clip per seed; degraded copies inherit the split.
 - Gate: `fixed_v1` schedule. Stuck item: halt zone and 2.25 s minimum stop (see findings 005). Severity bins: three equal bins over 0.1–1.0.
 - Code: `faultline.sim` (config, scenes, plan, render, clip), `faultline.media`, `faultline.sample.sheet`, `faultline.degrade.provisional`; `scripts/preview_sim.py`.
+
+## Phase 2 addendum (dataset v1)
+
+- Pipeline: `configs/dataset_v1.yaml` → `specs` (one row per clip, no rendering) → validation → render (parallel, resumable, atomic) → `manifest.csv` → gate → freeze (`dataset-v1` tag).
+- Sizes: train 1,500 / val 250 / test 500 / held-out D1 200 (300 / 50 / 100 / 40 per class). Held-out intervals are wide (about 13 clips per severity bin); the README says so. It is a qualitative domain-shift check.
+- Seeds: disjoint blocks per split (100000, 200000, 300000, 400000); reserve block 500000+ for replacements; blind audits 900000+. Severity is stratified within each class and split (equal counts per bin, within ±1), scenes A1–A3 in equal thirds.
+- Replacement rule: a clip that fails its visibility rule is replaced by a clip with the same split, class, scene and exact severity and a new seed from the reserve block. The original moves to `data/quarantine/`. Replacements are logged in `configs/replacements_v1.csv` (committed), so the effective spec is reproducible.
+- Visibility rule per class (column `visibility_rule`): `blocked_lens`, `spray`: tiles with mask area ≥ 40 px; `gate_open`: tiles where the arm differs from the schedule; `stuck_item`: halted tiles and consecutive halted pairs (`frozen_tiles`). The tile count is a spatial proxy only. For stuck_item the floor (minimum stop duration, optional onset cap `STUCK_ONSET_MAX_S`) is set from the targeted blind sweep (severity 0.15–0.45, early and late onset) before the full render.
+- Resume: each clip is written as `<id>.tmp.mp4` and renamed; the sidecar JSON (ground truth, sha256, build versions) is written last and marks the clip as done. A clip counts as done only if the sha256 in the sidecar matches the file.
+- Reproducibility claim: frame content is deterministic from the seed given the same sim code and library versions. The manifest records ffmpeg, OpenCV, numpy and Python versions and the git commit per clip. MP4 bytes are only identical on the same ffmpeg build. `scripts/frame_hash.py` checks frame determinism across machines.
+- Tests: spec built byte for byte from the config; committed `configs/specs_v1.csv` equals the rebuilt spec; ground-truth columns of a sample regenerate exactly (slow-marked test, `pytest -m slow`).

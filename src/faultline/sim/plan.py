@@ -128,7 +128,9 @@ def make_plan(seed: int, cls: str, scene_id: str, severity: float | None = None,
 
     rf = np.random.default_rng([seed, 2])
     sev_draw = rf.uniform(C.SEVERITY_MIN, C.SEVERITY_MAX)
-    onset_draw = rf.uniform(C.ONSET_MIN_S, C.ONSET_MAX_S)
+    onset_u = rf.uniform(0.0, 1.0)  # same random double as before; mapped to the class-specific range below
+    onset_max = C.STUCK_ONSET_MAX_S if cls == "stuck_item" else C.ONSET_MAX_S
+    onset_draw = C.ONSET_MIN_S + (onset_max - C.ONSET_MIN_S) * onset_u
     s = float(sev_draw if severity is None else severity)
     s = min(max(s, C.SEVERITY_MIN), C.SEVERITY_MAX)
     plan.severity = s
@@ -145,7 +147,7 @@ def make_plan(seed: int, cls: str, scene_id: str, severity: float | None = None,
         return plan
 
     t_on = float(onset_draw if onset_s is None else onset_s)
-    t_on = min(max(t_on, C.ONSET_MIN_S), C.ONSET_MAX_S) if cls != "blocked_lens" else 0.0
+    t_on = min(max(t_on, C.ONSET_MIN_S), onset_max) if cls != "blocked_lens" else 0.0
     k_on = int(round(t_on * C.FPS))
     plan.onset_frame = k_on
 
@@ -164,6 +166,9 @@ def make_plan(seed: int, cls: str, scene_id: str, severity: float | None = None,
         plan.severity_physical, plan.severity_unit = (k_end - k_on) / C.FPS, "stop_duration_s"
         plan.extra["stuck_item_index"] = i_stuck
         plan.extra["hold_frames"] = (k_on, k_end)
+        gaps = [abs(float(pos_cf[j, k_on]) - x_hold) - (items[j].size + items[i_stuck].size) / 2
+                for j in range(len(items)) if j != i_stuck and items[j].lane == items[i_stuck].lane]
+        plan.extra["neighbor_gap_at_onset_px"] = float(min(gaps)) if gaps else None
     elif cls == "spray":
         xj = float(C.FLANGE_X[int(rf.integers(0, len(C.FLANGE_X)))] + rf.uniform(-8, 8))
         angle = float(rf.uniform(-0.35, 0.35))

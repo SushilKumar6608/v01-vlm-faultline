@@ -33,6 +33,10 @@ SEVERITY_MIN, SEVERITY_MAX = 0.1, 1.0
 SEVERITY_BINS = ((0.1, 0.4, "low"), (0.4, 0.7, "mid"), (0.7, 1.0001, "high"))
 ONSET_MIN_S, ONSET_MAX_S = 1.0, 3.5  # cap 3.5 s: at least 3 sampled frames after onset
 
+# stuck_item only: latest onset. Equal to ONSET_MAX_S until the Phase 2 stuck-item sweep sets it
+# (a lower cap guarantees more sampled frames after onset).
+STUCK_ONSET_MAX_S = 3.5
+
 # --- belt, pipe, gate geometry (pixels) ---------------------------------------
 BELT_TOP, BELT_BOTTOM = 130, 250
 LANES_Y = (155, 190, 225)

@@ -1,6 +1,10 @@
 # data and generated artefacts (regenerable from seeds + manifest)
 data/*
 !data/.gitkeep
+!data/manifest.csv
+!data/spotcheck/
+data/spotcheck/*
+!data/spotcheck/spotcheck.csv
 *.mp4
 *.avi
 *.npy

@@ -79,3 +79,11 @@ Found in the first preview review (outside reviewer plus my own numerical checks
 - Decision: keep STUCK_MIN_STOP_S = 2.25 s and STUCK_ONSET_MAX_S = 3.5 s (no config change). The 80 % criterion is met overall and in the lowest bin, onset made no difference, and keeping the faint cases keeps the severity axis honest. Results are reported per severity bin; low-severity stuck items are expected to be the hardest class and the README says so.
 - Caveats: 18 sheets in the lowest bin (interval 0.67–0.97), so no measured 80 % claim there; rater is the author and knows the signature; single rater.
 - Next: 40-clip pilot render on the laptop (timing, manifest, integrity check), then the full render.
+
+## 009 – 2026-10-15 – Phase 2 gate: dataset v1 rendered and checked
+
+- 2,450 clips rendered (train 1,500 / val 250 / test 500 / held-out 200), about 0.9 s per clip wall with 16 workers.
+- Automated checks on all clips: integrity OK, 0 visibility flags, 0 replacements (`configs/replacements_v1.csv` empty). 50 clips fully decoded.
+- Worst-case montages (one per fault class) reviewed by the author: the faintest cases still show their fault.
+- Label-aware spot check, 50 random test sheets: 0 not labelable; upper 95 % bound on the failure rate about 5.8 %. Author, single rater.
+- This is not a detectability test: the Phase 3 blind audit is the separate gate.

@@ -1,0 +1,52 @@
+{
+  "dataset_version": "v1",
+  "n_clips": 2450,
+  "clips_per_split": {
+    "train": 1500,
+    "val": 250,
+    "test": 500,
+    "heldout": 200
+  },
+  "clips_per_split_class": {
+    "heldout/blocked_lens": 40,
+    "heldout/gate_open": 40,
+    "heldout/normal": 40,
+    "heldout/spray": 40,
+    "heldout/stuck_item": 40,
+    "test/blocked_lens": 100,
+    "test/gate_open": 100,
+    "test/normal": 100,
+    "test/spray": 100,
+    "test/stuck_item": 100,
+    "train/blocked_lens": 300,
+    "train/gate_open": 300,
+    "train/normal": 300,
+    "train/spray": 300,
+    "train/stuck_item": 300,
+    "val/blocked_lens": 50,
+    "val/gate_open": 50,
+    "val/normal": 50,
+    "val/spray": 50,
+    "val/stuck_item": 50
+  },
+  "manifest_sha256": "cdac66099c8a547d8ea22e22f9d0ca6b6fd7c59d9ed0bbc1b8eb4f99086a0473",
+  "specs_sha256": "1fcb1bc78af7174a2aa563cf59668c6c5ba8c559d86e076766130e93a11a2471",
+  "replacements_sha256": null,
+  "n_replacements": 0,
+  "spotcheck": {
+    "n_checked": 50,
+    "labelable": {
+      "yes": 50
+    },
+    "rater": "author, single rater"
+  },
+  "versions": {
+    "python": "3.11.17",
+    "numpy": "2.4.6",
+    "opencv": "5.0.0",
+    "ffmpeg": "ffmpeg version 9.0.2 Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "git_commit": "b2036eb32a8e87d44cdd6bf7f7028c84245748de",
+  "git_dirty": true,
+  "note": "MP4 bytes are identical only on the same ffmpeg build; frame content and ground-truth columns regenerate exactly from seeds."
+}

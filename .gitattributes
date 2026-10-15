@@ -1,0 +1,4 @@
+# Keep line endings identical on every machine: committed specs and manifests are compared byte for byte.
+* text=auto eol=lf
+*.png binary
+*.mp4 binary

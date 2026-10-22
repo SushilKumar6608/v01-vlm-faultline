@@ -2,13 +2,22 @@
 
 Synthetic conveyor / machine-hall simulation with four fault types, used to measure how well vision models detect each fault from short clips, and what breaks first.
 
-**Status:** Phase 3 complete (dataset v1 frozen, blind audit passed, degradation recipe v1 frozen). Next: evaluation harness and CNN baseline. No model results yet.
+**Status:** Phase 5 complete (M1: CNN baseline, clean and degraded, 3 seeds). Next: zero-shot vision-language models.
 
 **Central question:** do short clips (8 frames on a contact sheet) beat a single frame, and for which faults? Prediction to test: static faults need no sheet, temporal faults do.
 
 ## Results
 
-_To be filled after M1. This section will lead with the per-class results tables and the known-failure cases, not with the tool list._
+M1 – small CNN trained from scratch on clean clips, test split, mean over 3 seeds (range). Full tables in `results/cnn_baseline/results.md`, interpretation in `findings.md` (011).
+
+| Input | Clean | Degraded | Held-out D1 (clean) |
+|---|---|---|---|
+| Single frame | 96.7 % (96.0–97.2) | 57 % (36–76) | 20 % |
+| 8-frame sheet | 99.9 % (99.8–100) | 62 % (31–81) | 23 % (20–30) |
+
+- On clean data the sheet fixes exactly the confusions the single frame has: normal versus stuck_item. Gate, spray and blocked-lens faults are found from one frame.
+- A CNN trained on clean clips does not survive the degradation (it calls everything blocked_lens; false alarms 73–100 %) and does not transfer to the held-out scene (chance level). Seeds disagree strongly on degraded data, so no sheet-versus-single claim is made there.
+- Vision-language model results follow in the next phases.
 
 ## Honest framing
 

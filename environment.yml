@@ -16,4 +16,4 @@ dependencies:
   - pytest
   - opencv
   - ffmpeg
-# PyTorch (CPU) and onnx/onnxruntime are added in Phase 4 and Phase 8 to keep this env small.
+# PyTorch (CPU build) is installed with pip in Phase 5: pip install torch --index-url https://download.pytorch.org/whl/cpu ; onnx/onnxruntime follow in Phase 8.

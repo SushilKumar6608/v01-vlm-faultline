@@ -121,3 +121,13 @@ Real footage, multiple camera angles, 3D, tracking, real-time VLM inference, GGU
 - Sheet versus single frame: paired on the same clips, exact McNemar test, overall and per true class. The p-values are descriptive and not corrected for multiple comparisons.
 - Reference models (`faultline.eval.models`): oracle (must score 100 %), always-normal (must score exactly 20 %), random, and a noisy oracle. `scripts/selftest_eval.py` runs them on the real manifest to check the scoring before any real model is scored.
 - Output: `scripts/evaluate.py` writes CSV tables and `results.md` to `results/<name>/`; these are committed. Several predictions files can be combined into one comparison table.
+
+## Phase 5 addendum (CNN baseline)
+
+- Question answered: how far does a small CNN trained from scratch on the clean training clips get, with one tile versus all eight, on clean and degraded test and held-out clips. It is the floor the vision-language models have to beat, not a tuned model.
+- Input: the same 8 tiles as the sheets, halved to 160×90 with area interpolation (`faultline.models.cache`). Single = last tile; sheet = all 8 in time order. The timestamp is in the pixels in both cases. Cached once per (condition, split) in `data/cache_tiles/` (not tracked).
+- Model (`faultline.models.cnn`): four conv blocks applied to each tile with shared weights, a 1×1 reduction to 16 channels, tiles stacked along the channel axis in time order, a 3×3 conv, pooling, dropout, a linear layer. The single-frame model is the same network with one tile. About 0.09 M parameters (single) and 0.19 M (sheet).
+- Training (`faultline.models.train`): AdamW, 30 epochs, batch 32, cosine schedule with 2 warm-up epochs, label smoothing 0.05, mild brightness and contrast jitter only (no noise, blur or flips, so robustness to degradation is not trained in). Clean training clips only. The checkpoint with the best clean validation accuracy is used. Three seeds (0, 1, 2); the report shows each seed and the spread.
+- Crash safety: checkpoint after every epoch with atomic rename; data order and augmentation depend only on (seed, epoch); a resumed run gives the same weights as an uninterrupted one (tested). Finished steps (cache files, runs, prediction files) are skipped on re-run. CPU threads are capped (6), priority is below normal, sleep is blocked on Windows.
+- Outputs: `results/predictions/cnn_s<seed>_<kind>.csv` (committed) and `results/cnn_baseline/` (tables, `results.md`, `seed_summary.csv`). Checkpoints stay in `data/runs/` (not tracked).
+- Limits to state with the results: validation data chooses the checkpoint; three seeds is a small sample of training randomness; the CNN has no pretrained weights; held-out D1 intervals are wide.

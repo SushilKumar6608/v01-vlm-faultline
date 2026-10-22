@@ -2,7 +2,7 @@
 
 Synthetic conveyor / machine-hall simulation with four fault types, used to measure how well vision models detect each fault from short clips, and what breaks first.
 
-**Status:** Phase 2 complete (dataset v1 generated and checked). No model results yet.
+**Status:** Phase 3 complete (dataset v1 frozen, blind audit passed, degradation recipe v1 frozen). Next: evaluation harness and CNN baseline. No model results yet.
 
 **Central question:** do short clips (8 frames on a contact sheet) beat a single frame, and for which faults? Prediction to test: static faults need no sheet, temporal faults do.
 

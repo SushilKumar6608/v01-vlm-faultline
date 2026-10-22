@@ -1,0 +1,13 @@
+# Frozen degradation recipe v1 (Phase 3). Applied to the clean clips to make the degraded copies.
+# Identical in effect to the former provisional recipe 'provisional_worst_case_v1'; only the name changed.
+# Do not edit: tests/test_degrade_recipe.py pins it. A change means a new recipe file (degradation_v2.yaml)
+# and re-evaluating every model that used v1.
+name: degradation_v1
+scale: [320, 180]
+blur_sigma: 1.0
+noise_strength: 36
+crf: 38
+preset: medium
+noise_seed_rule: "(clip_seed * 7919 + 13) % 2147483647"
+ffmpeg_flags: "-threads 1 -map_metadata -1 -fflags +bitexact -flags:v +bitexact"
+audit: "Phase 3 blind audit, 100 fresh sheets, author single rater: 96/100, min class recall 0.90, 0 false alarms on normal"

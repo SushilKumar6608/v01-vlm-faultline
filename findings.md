@@ -57,7 +57,7 @@ Found in the first preview review (outside reviewer plus my own numerical checks
 
 - 30 unlabelled degraded sheets (v1 recipe), 6 per class, shuffled, scenes A1–A3, seeds 900000+. Result: 29/30 correct. Per-class recall: normal 1.00 (n=6), gate_open 1.00, spray 1.00, blocked_lens 1.00, stuck_item 0.83 (5/6). Wilson 95 % intervals are wide (about 0.44–1.00 at best) with n=6 per class.
 - The one miss: `stuck_item` labelled `normal`, severity 0.26 (low bin), scene A2. It is consistent with the measured floor: low-severity stuck items give about 2–3 halted tiles.
-- Caveats: one rater who is also the author, knew the classes were balanced, and had the decision checklist; one stuck_item sheet (sheet_001, assisted) was labelled with help from Claude and counts as correct. This shows the faults are visible, not how hard the task is.
+- Caveats: one rater who is also the author, knew the classes were balanced, and had the decision checklist; one stuck_item sheet (sheet_001, assisted) was labelled with help and counts as correct. This shows the faults are visible, not how hard the task is.
 - Decision: no sim change. The low-severity stuck item stays as the faintest case on the severity axis and is reported per severity bin. Revisit if the VLM or CNN results show it is at chance in the high bin too.
 - Next: Phase 2 (bulk generation, manifest, seed-based splits). Final degradation recipe frozen in Phase 3, followed by a shorter repeat of the blind audit.
 
@@ -87,3 +87,11 @@ Found in the first preview review (outside reviewer plus my own numerical checks
 - Worst-case montages (one per fault class) reviewed by the author: the faintest cases still show their fault.
 - Label-aware spot check, 50 random test sheets: 0 not labelable; upper 95 % bound on the failure rate about 5.8 %. Author, single rater.
 - This is not a detectability test: the Phase 3 blind audit is the separate gate.
+
+## 010 – 2026-10-22 – Phase 3: blind audit passed, degradation recipe frozen
+
+- Blind audit (author, single rater): 100 fresh degraded sheets (seed block 950000+, never in train/val/test/held-out), 20 per class, severities stratified per class, scenes A1–A3. Pass criteria were fixed before labelling.
+- Result: accuracy 96/100 (Wilson 95 % CI 0.90–0.98). Recall: normal 20/20, spray 20/20, blocked_lens 20/20 (CI 0.84–1.00 each); stuck_item 18/20 and gate_open 18/20 (0.90, CI 0.70–0.97). False alarms on normal 0/20. All three gates passed (accuracy at least 85 %, no class below 70 %, false alarms at most 10 %).
+- Four misses, all labelled normal: stuck_item at severity 0.23 and 0.76 (A3); gate_open at severity 0.95 (A2), twice. The two gate misses were re-rendered from their seeds: the labels are correct. At high severity the arm stays open from t = 2.25 s onward, which looks like the scheduled opening at t = 1.5 s, so it reads as normal unless the schedule is applied (arm open in 6 of 8 tiles instead of the scheduled 2). This is the state-versus-schedule design working as intended, not a generator error. Consequence: gate_open needs schedule knowledge, so zero-shot prompts must state the schedule (fixed_v1). The two stuck_item misses were not re-examined individually and are consistent with the faint or late cases in finding 008.
+- Decision: recipe frozen as degradation_v1 (`configs/degradation_v1.yaml`, parameters unchanged from the provisional recipe, pinned by `tests/test_degrade_recipe.py`). No tuning after a pass, so the benchmark is not made easier after the fact. Degraded copies are derived from the clean clips, so dataset v1 is unchanged.
+- Caveats: the rater is the author and knows the fault signatures; n = 20 per class gives wide intervals; severity bins hold 6–7 sheets each.

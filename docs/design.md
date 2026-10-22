@@ -106,3 +106,18 @@ Real footage, multiple camera angles, 3D, tracking, real-time VLM inference, GGU
 - Resume: each clip is written as `<id>.tmp.mp4` and renamed; the sidecar JSON (ground truth, sha256, build versions) is written last and marks the clip as done. A clip counts as done only if the sha256 in the sidecar matches the file.
 - Reproducibility claim: frame content is deterministic from the seed given the same sim code and library versions. The manifest records ffmpeg, OpenCV, numpy and Python versions and the git commit per clip. MP4 bytes are only identical on the same ffmpeg build. `scripts/frame_hash.py` checks frame determinism across machines.
 - Tests: spec built byte for byte from the config; committed `configs/specs_v1.csv` equals the rebuilt spec; ground-truth columns of a sample regenerate exactly (slow-marked test, `pytest -m slow`).
+
+## Phase 3 addendum (audit and frozen recipe)
+
+- Blind audit: 100 fresh degraded sheets (seed block 950000+, 20 per class, severities stratified), author as single rater. Pass criteria fixed beforehand: accuracy at least 85 %, no class recall below 70 %, false alarms on normal at most 10 %. Result in findings 010.
+- Degradation recipe v1 is frozen in `configs/degradation_v1.yaml` (320×180, blur σ 1.0, noise 36, CRF 38, noise seed from the clip seed); `tests/test_degrade_recipe.py` pins it by hash. A change means a new recipe file and re-evaluating every model that used v1.
+
+## Phase 4 addendum (evaluation harness)
+
+- Degraded copies: `scripts/degrade_dataset.py` makes `data/degraded/<split>/<clip_id>.mp4` from the clean clips with recipe v1. Resumable and atomic; `data/degraded/recipe.json` refuses a mix of recipes; `data/degraded_manifest.csv` holds the sha256 of every file. Models train on clean clips only and are evaluated on clean and degraded.
+- Inputs (`faultline.eval.inputs`): `sheet` (360×1280) or `single` (180×320, the last tile with its timestamp), from clean or degraded clips. Same pipeline as the Phase 3 audit sheets.
+- Predictions file, one row per answer: `model, input, condition, split, clip_id, pred`. `pred` is one of the five classes or `invalid` (unparseable answer; counts as wrong and as no class). Each (model, input, condition, split) group must cover its split exactly unless partial results are explicitly allowed.
+- Metrics (`faultline.eval.metrics`): per-class recall and precision with n and Wilson 95 % intervals; accuracy; macro recall; fault-detected rate and false-alarm rate (any fault class versus normal); recall per severity bin; accuracy per scene; confusion matrices; invalid rate.
+- Sheet versus single frame: paired on the same clips, exact McNemar test, overall and per true class. The p-values are descriptive and not corrected for multiple comparisons.
+- Reference models (`faultline.eval.models`): oracle (must score 100 %), always-normal (must score exactly 20 %), random, and a noisy oracle. `scripts/selftest_eval.py` runs them on the real manifest to check the scoring before any real model is scored.
+- Output: `scripts/evaluate.py` writes CSV tables and `results.md` to `results/<name>/`; these are committed. Several predictions files can be combined into one comparison table.

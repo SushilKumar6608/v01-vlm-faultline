@@ -1,0 +1,11 @@
+model,input,condition,split,normal,stuck_item,gate_open,spray,blocked_lens
+Qwen3-VL-4B-Instruct,sheet,clean,heldout,1.0,0.0,0.0,0.95,0.2
+Qwen3-VL-4B-Instruct,sheet,clean,test,1.0,0.0,0.0,0.97,0.59
+Qwen3-VL-4B-Instruct,sheet,degraded,heldout,0.975,0.0,0.025,0.4,0.05
+Qwen3-VL-4B-Instruct,sheet,degraded,test,1.0,0.0,0.0,0.58,0.1
+Qwen3-VL-4B-Instruct,single,clean,heldout,0.0,0.0,1.0,1.0,0.625
+Qwen3-VL-4B-Instruct,single,clean,test,0.0,0.0,1.0,1.0,0.86
+Qwen3-VL-4B-Instruct,single,degraded,heldout,0.275,0.0,0.975,0.3,0.125
+Qwen3-VL-4B-Instruct,single,degraded,test,0.0,0.0,1.0,0.67,0.11
+Qwen3-VL-4B-Instruct+adapter_sheet,sheet,clean,test,0.8653846153846154,1.0,1.0,1.0,1.0
+Qwen3-VL-4B-Instruct+adapter_single,single,clean,test,0.98,0.78,1.0,1.0,0.98

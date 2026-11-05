@@ -1,0 +1,11 @@
+model,input,condition,split,n,accuracy,ci_lo,ci_hi,detect_recall,false_alarm
+Qwen3-VL-4B-Instruct,sheet,clean,heldout,200,0.43,0.36334204488394795,0.49929639594461706,0.2875,0.0
+Qwen3-VL-4B-Instruct,sheet,clean,test,500,0.512,0.4682614535997027,0.5555555555555556,0.39,0.0
+Qwen3-VL-4B-Instruct,sheet,degraded,heldout,200,0.29,0.2315392689125782,0.3563760535731166,0.15625,0.025
+Qwen3-VL-4B-Instruct,sheet,degraded,test,500,0.336,0.29598730030060416,0.3785135745775322,0.1725,0.0
+Qwen3-VL-4B-Instruct,single,clean,heldout,200,0.525,0.45597270710507,0.5930849925990139,1.0,1.0
+Qwen3-VL-4B-Instruct,single,clean,test,500,0.572,0.5282430423113503,0.6146590126201995,1.0,1.0
+Qwen3-VL-4B-Instruct,single,degraded,heldout,200,0.335,0.2732398096874265,0.4029793722656195,0.8875,0.725
+Qwen3-VL-4B-Instruct,single,degraded,test,500,0.356,0.31527383687422356,0.39892205326267655,0.995,1.0
+Qwen3-VL-4B-Instruct+adapter_sheet,sheet,clean,test,250,0.972,0.943341533054129,0.9863721151422264,1.0,0.1346153846153846
+Qwen3-VL-4B-Instruct+adapter_single,single,clean,test,500,0.948,0.9248983617059371,0.9642699800903735,0.94,0.02

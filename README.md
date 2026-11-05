@@ -2,7 +2,7 @@
 
 Synthetic conveyor / machine-hall simulation with four fault types, used to measure how well vision models detect each fault from short clips, and what breaks first.
 
-**Status:** Phase 5 complete (M1: CNN baseline, clean and degraded, 3 seeds). Phase 6 complete (zero-shot Qwen3-VL-4B baseline). Phase 7 (QLoRA fine-tuning of the VLM, one adapter for single frames and one for sheets) in progress; fine-tuned results are not in yet.
+**Status:** Phase 5 complete (M1: CNN baseline, clean and degraded, 3 seeds). Phase 6 complete (zero-shot Qwen3-VL-4B baseline). Phase 7 (QLoRA fine-tuning of the VLM, one adapter for single frames and one for sheets) has clean-test results; degraded and held-out scoring of the adapters is still to do.
 
 **Central question:** do short clips (8 frames on a contact sheet) beat a single frame, and for which faults? Prediction to test: static faults need no sheet, temporal faults do.
 
@@ -12,9 +12,9 @@ Synthetic conveyor / machine-hall simulation with four fault types, used to meas
 |---|---|---|---|---|---|
 | CNN from scratch (95–192 k parameters) | 96.7 % | 99.9 % | 57 % (36–76) | 62 % (31–81) | done, 3 seeds |
 | Qwen3-VL-4B zero-shot | 57.2 % | 51.2 % | 35.6 % | 33.6 % | done |
-| Qwen3-VL-4B + QLoRA adapter | – | – | – | – | training and scoring in progress |
+| Qwen3-VL-4B + QLoRA adapter | 94.8 % (n = 500) | 97.2 % (n = 250) | not scored | not scored | clean test done |
 
-What the numbers say so far: the clean test is solved by a tiny CNN, so the informative conditions are degraded and held-out data. A zero-shot VLM with a written task description finds spray and the dark lens smudge and misses gate-open and stuck-item clips. The fine-tuned row stays empty until the scored predictions exist; nothing is estimated.
+What the numbers say so far: the clean test is solved by a tiny CNN, so the informative conditions are degraded and held-out data. A zero-shot VLM with a written task description finds spray and the dark lens smudge and misses gate-open and stuck-item clips. Fine-tuning lifts the VLM from 51–57 % to 95–97 % on clean data, level with the CNN on single frames and below it on sheets, so on clean data it does not beat a 95 k-parameter CNN. Whether the adapters survive degraded and held-out data, where the CNN fails, has not been measured yet.
 
 ## Results
 
@@ -46,6 +46,17 @@ Zero-shot Qwen3-VL-4B-Instruct (fp16, T4), test split, 500 clips per cell (chanc
 - `kaggle/` – zero-shot scoring (`run_zero_shot.py`), QLoRA fine-tuning (`finetune_qlora.py`) and validation scoring for a free Kaggle T4 x2 session; see `kaggle/README.md`.
 - `findings.md` – dated log of every result and decision, including the ones that went against the prediction. `docs/design.md` – the design and its addenda.
 - `results/` – prediction CSVs and summary tables.
+
+Fine-tuned Qwen3-VL-4B (QLoRA, 4-bit, one adapter per input, 1,500 clean training clips, one epoch, one seed), clean test (`findings.md` 014, `results/vlm_finetune/`, `results/finetune/`). The sheet adapter was scored on the first 250 test clips because sheet scoring is slow; the single-frame adapter on all 500, and 96.8 % (94–98) on the same 250.
+
+| Input | Accuracy (95 % CI) | stuck_item recall | False alarms on normal |
+|---|---|---|---|
+| Single frame (n = 500) | 94.8 % (92–96) | 78 % | 2 % |
+| 8-frame sheet (n = 250) | 97.2 % (94–99) | 100 % | 13 % |
+
+- On the same 250 clips the sheet and single-frame adapters do not differ (sheet right and single wrong on 8 clips, the reverse on 7, McNemar p = 1.0).
+- They fail differently: the single-frame adapter misses stuck items and calls them normal; the sheet adapter finds every stuck item but calls some normal clips stuck_item.
+- Not measured yet: degraded test and held-out D1 for the adapters. Training used clean clips only and a single seed.
 
 ## Honest framing
 

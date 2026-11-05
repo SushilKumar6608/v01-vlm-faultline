@@ -337,3 +337,26 @@ def test_adapter_info_is_found_next_to_or_above_the_adapter(tmp_path):
     (tmp_path / "adapter_sheet" / "run_info.json").write_text(json.dumps(dict(model="m", load_4bit=True, kind="sheet")))
     assert zs.adapter_info(tmp_path / "adapter_sheet" / "final")["kind"] == "sheet"
     assert zs.adapter_info(tmp_path / "adapter_sheet")["load_4bit"] is True
+
+
+def test_compare_vlm_tables_and_mcnemar(tmp_path):
+    import pandas as pd
+
+    sp = importlib.util.spec_from_file_location("compare_vlm", ROOT / "scripts" / "compare_vlm.py")
+    cv = importlib.util.module_from_spec(sp)
+    sp.loader.exec_module(cv)
+    assert cv.mcnemar_exact(0, 0) == 1.0 and cv.mcnemar_exact(10, 0) < 0.01 and cv.mcnemar_exact(5, 5) == 1.0
+    lo, hi = cv.wilson(50, 100)
+    assert 0.40 < lo < 0.41 and 0.59 < hi < 0.60
+    rows = []
+    for m, kind in (("M+adapter_sheet", "sheet"), ("M+adapter_single", "single")):
+        for i, c in enumerate(["normal", "spray", "gate_open", "stuck_item"]):
+            pred = c if (kind == "sheet" or c != "stuck_item") else "normal"
+            rows.append(dict(model=m, input=kind, condition="clean", split="test", clip_id=f"{c}_A1_{i:06d}", pred=pred))
+    f = tmp_path / "p.csv"
+    pd.DataFrame(rows).to_csv(f, index=False)
+    d = cv.load([str(f)])
+    s, pr = cv.summary(d), cv.paired(d)
+    assert s.set_index(["model", "input"]).accuracy.to_dict() == {("M+adapter_sheet", "sheet"): 1.0, ("M+adapter_single", "single"): 0.75}
+    assert pr.iloc[0].sheet_only_right == 1 and pr.iloc[0].single_only_right == 0
+    assert "## test" in cv.markdown("t", s, cv.per_class(d), pr)

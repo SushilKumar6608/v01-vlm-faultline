@@ -131,3 +131,25 @@ Real footage, multiple camera angles, 3D, tracking, real-time VLM inference, GGU
 - Crash safety: checkpoint after every epoch with atomic rename; data order and augmentation depend only on (seed, epoch); a resumed run gives the same weights as an uninterrupted one (tested). Finished steps (cache files, runs, prediction files) are skipped on re-run. CPU threads are capped (6), priority is below normal, sleep is blocked on Windows.
 - Outputs: `results/predictions/cnn_s<seed>_<kind>.csv` (committed) and `results/cnn_baseline/` (tables, `results.md`, `seed_summary.csv`). Checkpoints stay in `data/runs/` (not tracked).
 - Limits to state with the results: validation data chooses the checkpoint; three seeds is a small sample of training randomness; the CNN has no pretrained weights; held-out D1 intervals are wide.
+
+## Phase 6 addendum (zero-shot vision-language models)
+
+- Model licence check (2026-10-23, model cards and the LICENSE file read): Qwen2.5-VL-3B-Instruct is under the Qwen Research License (research or evaluation only, attribution when redistributing derived models). Qwen3-VL-4B-Instruct, Qwen3-VL-2B-Instruct, Qwen2.5-VL-7B-Instruct and SmolVLM2-2.2B-Instruct are listed as Apache 2.0. Decision: the primary model is Qwen3-VL-4B-Instruct (replaces Qwen2.5-VL-3B); Qwen3-VL-2B and SmolVLM2-2.2B are the comparison models. This is a reading of the model cards, not legal advice.
+- Inputs: the same images a human saw in the Phase 3 audit, exported losslessly (PNG) for val, test and held-out, clean and degraded, single and sheet (`scripts/export_vlm_inputs.py`, index with sha256).
+- Prompts (`configs/prompts_v1.yaml`, frozen before any test or held-out run): the scene description, the five lettered options and the gate schedule fixed_v1 are stated; single-frame and sheet prompts carry the same facts. Validation is used to check that prompts and parsing work; test and held-out are not used to choose a prompt.
+- Answer scoring: no free text. The answer is the letter with the highest probability at the first answer position; the five letter probabilities are saved (soft labels for distillation) together with the probability mass the model puts on the letters (a format check). A reversed-letter run measures position bias.
+- Runner (`kaggle/run_zero_shot.py`): self-contained, resumable, stops if more than 20 % of answers have non-finite logits (fp16 on a T4). Predictions are written in the Phase 4 format and scored with `scripts/evaluate.py`.
+- Not yet verified: fp16 stability and speed on the T4, letter tokenisation for each model, and whether the models read the 1280x360 sheet at a useful resolution. The smoke test checks the first two; the resolution question shows up in the results.
+
+### Phase 6 addendum 2: answer-by-name scoring (prompts_v2)
+
+The first validation run with lettered options (prompts_v1) was dominated by position bias (findings 013). prompts_v2 asks for a one-word label (normal, stuck, gate, spray, blocked), reads the probability of each label's first token, and averages two option orders in which every class moves. Cost: two forward passes per image, roughly 1.5 h per model for the test and held-out run on a T4. The zero-shot protocol is: check v2 on the validation split, freeze, run test and held-out once per model.
+
+## Phase 7 addendum (QLoRA fine-tuning of the VLM)
+
+- Why: the zero-shot baseline (findings 013) finds spray and the smudge and nothing that needs a close look at the gate arm or a comparison across frames. A fine-tuned model has a real number to beat, and the sheet-versus-single question becomes testable.
+- Recipe (`kaggle/finetune_qlora.py`): Qwen3-VL-4B-Instruct base loaded in 4 bit (nf4, fp16 compute), LoRA rank 16 / alpha 32 / dropout 0.05 on the language model's attention and MLP layers (vision tower frozen; `--lora-vision` is an option). Target: ordinary next-token cross-entropy on the first token of the one-word answer of prompts_v2. The option order in the prompt is a random permutation per sample, so no letter or position shortcut can be learned. AdamW, learning rate 1e-4 with 5 % warm-up and cosine decay, 8 samples per optimizer step (batch 1 with gradient accumulation), gradient clipping 1.0, fp16 autocast with a gradient scaler, gradient checkpointing.
+- Protocol: clean training clips only (same as the CNN baseline); one adapter per input kind (single, sheet) trained with the same recipe; the adapter is scored with the same runner and the same two-order scoring as the zero-shot baseline (`--adapter`), so the tables are comparable. Validation decides when to stop; test and held-out are run once.
+- Not verified before the fit test: memory and speed on a T4 (the plan assumes it fits), that fp16 training stays finite, the LoRA module names for Qwen3-VL (the script stops and prints example module names if none match). Training time per epoch sets how many epochs are affordable on the free quota.
+- Limits to state with the results: one model, one seed at first; the held-out scene is a single scene; fine-tuning on clean clips only may not transfer to degraded or held-out data (the CNN did not).
+

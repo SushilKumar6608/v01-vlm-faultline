@@ -1,0 +1,50 @@
+# Zero-shot prompts v2. Written after the prompts_v1 validation run showed strong answer-letter position bias
+# (see findings 013). Changes against v1: (1) the model answers with a one-word label, not a letter, and the answer is
+# read from the first generated token; (2) every clip is scored under two option orders in which every class changes
+# position, and the class probabilities are averaged. Scene description and gate schedule are unchanged from v1.
+# Frozen before any test or held-out run. A further change means prompts_v3.yaml and a re-run.
+name: prompts_v2
+scoring: names
+# class -> one-word answer
+labels:
+  normal: normal
+  stuck_item: stuck
+  gate_open: gate
+  spray: spray
+  blocked_lens: blocked
+# option orders used for every clip (each class sits at a different position in the two orders)
+orders:
+  - [normal, stuck_item, gate_open, spray, blocked_lens]
+  - [spray, blocked_lens, normal, stuck_item, gate_open]
+descriptions:
+  normal: "nothing is wrong."
+  stuck_item: "one item has stopped on the belt while the others keep moving, so items bunch up behind it (in the sheet it stays at the same place in consecutive frames; in a single frame you can only see items bunched up behind a gap)."
+  gate_open: "the gate arm is open (swung to the side) when it should be closed."
+  spray: "a thin pale-blue jet sprays from a joint in the pipe at the top, with a wet blue patch and droplets where it lands on the belt."
+  blocked_lens: "a large dark smudge with soft edges covers part of the view."
+sheet: |
+  This image is a contact sheet of 8 frames from one 6-second clip of a conveyor-belt station seen from above. It has 2 rows of 4 frames. Time runs left to right, top row first. The time of each frame is printed in its top-left corner (0.00 s to 5.25 s, in steps of 0.75 s).
+
+  A normal clip looks like this:
+  - Small coloured items travel left to right along the belt in three lanes.
+  - A magenta gate arm at the right hangs straight down when closed. By schedule it swings open (flat) twice, from 1.0 s to 2.0 s and from 4.0 s to 5.0 s. So it is open in the frames at 1.50 s and 4.50 s and closed in the other six frames.
+  - A pipe runs along the top and nothing leaks from it.
+  - The view is clear.
+
+  Possible conditions (listed in no particular order):
+  {options}
+
+  Which one condition best describes this clip? Answer with exactly one word: normal, stuck, gate, spray or blocked.
+single: |
+  This image is one frame, taken at 5.25 s, from a 6-second clip of a conveyor-belt station seen from above. The time is printed in its top-left corner.
+
+  A normal clip looks like this:
+  - Small coloured items travel left to right along the belt in three lanes.
+  - A magenta gate arm at the right hangs straight down when closed. By schedule it is open (flat) from 1.0 s to 2.0 s and from 4.0 s to 5.0 s. At 5.25 s a normal gate is closed, hanging straight down.
+  - A pipe runs along the top and nothing leaks from it.
+  - The view is clear.
+
+  Possible conditions (listed in no particular order):
+  {options}
+
+  Which one condition best describes this clip? Answer with exactly one word: normal, stuck, gate, spray or blocked.

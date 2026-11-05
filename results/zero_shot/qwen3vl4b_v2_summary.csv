@@ -1,0 +1,9 @@
+split,condition,input,n,accuracy,ci_lo,ci_hi,orders_agree,recall_blocked_lens,recall_gate_open,recall_normal,recall_spray,recall_stuck_item
+heldout,clean,sheet,200,0.43,0.363,0.499,0.94,0.2,0.0,1.0,0.95,0.0
+heldout,clean,single,200,0.525,0.456,0.593,0.975,0.625,1.0,0.0,1.0,0.0
+heldout,degraded,sheet,200,0.29,0.232,0.356,0.89,0.05,0.025,0.975,0.4,0.0
+heldout,degraded,single,200,0.335,0.273,0.403,0.84,0.125,0.975,0.275,0.3,0.0
+test,clean,sheet,500,0.512,0.468,0.556,0.934,0.59,0.0,1.0,0.97,0.0
+test,clean,single,500,0.572,0.528,0.615,0.984,0.86,1.0,0.0,1.0,0.0
+test,degraded,sheet,500,0.336,0.296,0.379,0.956,0.1,0.0,1.0,0.58,0.0
+test,degraded,single,500,0.356,0.315,0.399,0.94,0.11,1.0,0.0,0.67,0.0
